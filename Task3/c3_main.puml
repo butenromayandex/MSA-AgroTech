@@ -1,0 +1,32 @@
+@startuml c3_main
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Component.puml
+
+title C3: Компонентная диаграмма - Farm Core Service (Основное решение)
+
+Container_Boundary(farm_core, "Farm Core Service") {
+    Component(api_handler, "API Handler", "Gin Gonic", "Обработка HTTP/gRPC запросов")
+    Component(event_consumer, "Event Consumer", "Go Channel", "Чтение событий из RabbitMQ")
+    Component(alert_manager, "Alert Manager", "Service", "Логика генерации тревог")
+    Component(health_service, "Health Service", "Service", "Анализ здоровья животных")
+    Component(repo, "Repository", "Gorm", "Работа с базой данных")
+    Component(event_publisher, "Event Publisher", "AMQP Client", "Публикация событий")
+}
+
+ContainerDb(local_db, "Local DB", "PostgreSQL", "Хранение данных")
+ContainerDb(local_mq, "Local Broker", "RabbitMQ", "Очередь событий")
+
+Rel(api_handler, alert_manager, "Использует")
+Rel(api_handler, health_service, "Использует")
+
+Rel(event_consumer, local_mq, "Потребляет", "События")
+Rel(event_consumer, alert_manager, "Запускает")
+
+Rel(alert_manager, repo, "Читает/Пишет")
+Rel(alert_manager, event_publisher, "Публикует Тревогу")
+
+Rel(health_service, repo, "Читает Историю")
+
+Rel(repo, local_db, "SQL")
+Rel(event_publisher, local_mq, "AMQP")
+
+@enduml

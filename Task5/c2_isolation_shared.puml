@@ -1,0 +1,24 @@
+@startuml c2_isolation_shared
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Container.puml
+
+title C2: Изоляция данных - Вариант 2 (Shared Database / Discriminator)
+
+System_Boundary(saas, "SaaS Platform") {
+    Container(api, "API Service", "Go", "Роутинг запросов")
+    
+    ContainerDb(shared_db, "Shared DB", "PostgreSQL", "Единая таблица с колонкой tenant_id")
+}
+
+Rel(api, shared_db, "Запрос WHERE tenant_id = ?", "SQL")
+
+Note right of shared_db
+  Таблица: Users
+  | id | tenant_id | name | ... |
+  | 1  | 101       | Ivan | ... |
+  | 2  | 102       | John | ... |
+  
+  Плюсы: Дешево, легко мигрировать.
+  Минусы: Риск утечки данных (забыли WHERE), сложно бекапить отдельно.
+End note
+
+@enduml

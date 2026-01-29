@@ -1,0 +1,44 @@
+@startuml c4_code_alt
+title C4: Диаграмма кода (Analytics Engine - Альтернативное решение)
+
+class AnalyticsEngine {
+    - repo: JPARepository
+    - notifier: NotificationService
+    + AnalyzeTelemetry(data: TelemetryData): void
+    - DetectAnomalies(metrics: List<Metric>): bool
+}
+
+interface JPARepository {
+    + SaveAnalytics(record: AnalyticsRecord): void
+    + GetHistory(deviceId: UUID): List<Record>
+}
+
+interface NotificationService {
+    + SendPush(userId: UUID, message: string): void
+    + SendSMS(phone: string, message: string): void
+}
+
+class HibernateRepo {
+    - entityManager: EntityManager
+    + SaveAnalytics(record: AnalyticsRecord): void
+}
+
+class FirebaseNotifier {
+    - apiKey: string
+    + SendPush(userId: UUID, message: string): void
+}
+
+class AnalyticsRecord {
+    + ID: UUID
+    + Type: EventType
+    + Value: float
+    + CreatedAt: DateTime
+}
+
+AnalyticsEngine --> JPARepository
+AnalyticsEngine --> NotificationService
+HibernateRepo ..|> JPARepository
+FirebaseNotifier ..|> NotificationService
+AnalyticsEngine ..> AnalyticsRecord : Создает
+
+@enduml

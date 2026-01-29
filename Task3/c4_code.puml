@@ -1,0 +1,46 @@
+@startuml c4_code
+title C4: Диаграмма кода (AlertManager)
+
+class AlertManager {
+    - repo: Repository
+    - publisher: EventPublisher
+    + ProcessEvent(event: Event): void
+    + CreateAlert(severity: string, msg: string): Alert
+    - CheckThresholds(data: Telemetry): bool
+}
+
+interface Repository {
+    + SaveAlert(alert: Alert): error
+    + GetThresholds(sensorId: string): ThresholdConfig
+}
+
+interface EventPublisher {
+    + Publish(topic: string, msg: Message): error
+}
+
+class PostgresRepo {
+    - db: *gorm.DB
+    + SaveAlert(alert: Alert): error
+    + GetThresholds(sensorId: string): ThresholdConfig
+}
+
+class RabbitPublisher {
+    - ch: *amqp.Channel
+    + Publish(topic: string, msg: Message): error
+}
+
+class Alert {
+    + ID: uuid
+    + Timestamp: time
+    + Severity: string
+    + Message: string
+    + FarmID: string
+}
+
+AlertManager --> Repository
+AlertManager --> EventPublisher
+PostgresRepo ..|> Repository
+RabbitPublisher ..|> EventPublisher
+AlertManager ..> Alert : Создает
+
+@enduml

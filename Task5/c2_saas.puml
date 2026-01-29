@@ -1,0 +1,43 @@
+@startuml c2_saas
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Container.puml
+
+title C2: SaaS Платформа (To-Be)
+
+Person(client_admin, "Администратор клиента", "Управляет подпиской и пользователями")
+System_Ext(payment_gateway, "Платежная система", "Yookassa/CloudPayments")
+System_Ext(client_erp, "ERP Клиента", "Внешняя система")
+
+System_Boundary(saas_platform, "AgroMonitor SaaS") {
+    
+    Container(public_api, "Public API Gateway", "Nginx", "Точка входа для интеграций")
+    Container(web_portal, "Self-Service Portal", "React", "Кабинет клиента")
+    
+    Container(tenant_manager, "Tenant Manager", "Go", "Управление тенантами и изоляцией")
+    Container(billing_service, "Billing Service", "Go", "Тарификация и списания")
+    Container(auth_service, "Identity Provider", "Keycloak", "SSO и управление доступом")
+    
+    Container(core_api, "Core API", "Java", "Бизнес-логика (Multitenant)")
+    Container(analytics, "Analytics Engine", "Spark", "Генерация отчетов")
+    
+    ContainerDb(saas_db, "SaaS DB", "PostgreSQL", "Схемы: tenant_a, tenant_b...")
+    ContainerDb(billing_db, "Billing DB", "PostgreSQL", "Финансовые транзакции")
+}
+
+Rel(client_admin, web_portal, "Управляет аккаунтом")
+Rel(client_erp, public_api, "REST API запросы")
+
+Rel(public_api, auth_service, "Проверка токена")
+Rel(public_api, core_api, "Проксирование запроса")
+
+Rel(web_portal, billing_service, "Оплата")
+Rel(billing_service, payment_gateway, "Проведение платежа")
+Rel(billing_service, billing_db, "Сохранение транзакций")
+Rel(billing_service, tenant_manager, "Обновление подписки")
+
+Rel(core_api, tenant_manager, "Проверка контекста")
+Rel(core_api, saas_db, "Запрос (set search_path)")
+Rel(core_api, analytics, "Запрос аналитики", "REST")
+
+Rel(analytics, saas_db, "Чтение данных")
+
+@enduml

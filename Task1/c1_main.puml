@@ -1,0 +1,29 @@
+@startuml c1_main
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Context.puml
+
+title C1: Система мониторинга животных (AgroTech) (Основное решение - Гибридное)
+
+Person(operator, "Оператор фермы", "Следит за оповещениями и состоянием животных")
+Person(vet, "Ветеринар/Зоотехник", "Анализирует здоровье и развитие стада")
+Person(admin, "Администратор", "Управляет настройками системы")
+
+System(monitoring_system, "Система мониторинга (Hybrid)", "Мониторинг, видеоаналитика и управление фермой")
+
+System_Ext(cameras, "Видеокамеры", "RTSP/ONVIF потоки")
+System_Ext(sensors, "Датчики IoT", "Температура, влажность, CO2, вода")
+System_Ext(feeders, "Контроллеры кормушек/поилок", "Управление подачей")
+System_Ext(erp, "ERP 1C", "Учет поголовья и кормов")
+System_Ext(mobile_app, "Мобильное приложение", "Для сотрудников в полях")
+
+Rel(operator, monitoring_system, "Получает тревоги и отчеты")
+Rel(vet, monitoring_system, "Просматривает аналитику")
+Rel(admin, monitoring_system, "Настраивает систему")
+
+Rel(monitoring_system, cameras, "Получает видеопоток", "RTSP")
+Rel(monitoring_system, sensors, "Считывает показатели", "MQTT/Modbus")
+Rel(monitoring_system, feeders, "Управляет устройствами", "Modbus/Relay")
+
+Rel(monitoring_system, erp, "Синхронизирует данные", "REST API")
+Rel(monitoring_system, mobile_app, "Предоставляет API", "HTTPS")
+
+@enduml

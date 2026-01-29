@@ -1,0 +1,63 @@
+@startuml c2_main
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Container.puml
+
+title C2: Контейнерная диаграмма (Основное решение - Гибридное)
+
+Person(operator, "Оператор фермы", "Мониторинг на месте")
+Person(manager, "Менеджер/Аналитик", "Глобальная аналитика из офиса")
+System_Ext(cameras, "Видеокамеры", "RTSP")
+System_Ext(sensors, "Датчики/Кормушки", "MQTT/Modbus")
+System_Ext(erp, "ERP 1C", "Корпоративная система")
+
+System_Boundary(hybrid_system, "AgroMonitor Platform") {
+
+    Boundary(cloud, "Облако") {
+        Container(api_gateway, "API Gateway", "Nginx/Go", "Единая точка входа для внешних клиентов")
+        Container(auth_service, "Auth Service", "Go, JWT", "Управление пользователями и правами")
+        Container(global_aggregator, "Global Data Service", "Java Spring", "Агрегация данных со всех ферм")
+        Container(erp_adapter, "ERP Adapter", "Go", "Интеграция с 1С")
+        ContainerDb(global_db, "Global DB", "PostgreSQL", "Хранение исторических данных и аналитики")
+        Container(web_app, "Web Dashboard", "React", "Панель управления для менеджеров")
+    }
+
+    Boundary(farm, "Ферма (Edge Location)") {
+        Container(edge_gateway, "Edge Gateway", "Traefik", "Локальная маршрутизация")
+        Container(local_web, "Local Dashboard", "React/Static", "Локальная панель управления (Оффлайн режим)")
+        Container(video_service, "Video Analytics", "Python, PyTorch", "Обработка видеопотока, детекция событий")
+        Container(device_service, "Device Controller", "Go", "Взаимодействие с датчиками и кормушками")
+        Container(farm_core, "Farm Core Service", "Go", "Бизнес-логика фермы, локальные алерты")
+        Container(sync_service, "Sync Service", "Go", "Синхронизация данных с облаком (очередь)")
+        
+        ContainerDb(local_db, "Local DB", "PostgreSQL", "Локальное хранение конфигурации и событий")
+        ContainerDb(local_mq, "Local Broker", "RabbitMQ", "Шина событий на ферме")
+    }
+}
+
+Rel(operator, local_web, "Использует локальный UI", "HTTPS")
+Rel(manager, api_gateway, "Использует глобальный UI", "HTTPS")
+
+Rel(cameras, video_service, "RTSP поток")
+Rel(sensors, device_service, "Данные телеметрии")
+
+Rel(video_service, local_mq, "События (драка, задавливание)", "AMQP")
+Rel(device_service, local_mq, "Данные устройств", "AMQP")
+
+Rel(local_mq, farm_core, "Потребляет события", "AMQP")
+Rel(farm_core, local_db, "Пишет/Читает данные", "SQL")
+Rel(farm_core, device_service, "Команды (открыть кормушку)", "gRPC/HTTP")
+
+Rel(edge_gateway, local_web, "Раздает статику", "HTTP")
+Rel(local_web, farm_core, "API запросы (через Gateway)", "XHR/Fetch")
+
+Rel(local_mq, sync_service, "События для отправки", "AMQP")
+Rel(sync_service, api_gateway, "Передача данных (Batch)", "HTTPS/WSS")
+
+Rel(api_gateway, auth_service, "Проверка токена", "gRPC")
+Rel(api_gateway, global_aggregator, "Проксирует запросы", "gRPC")
+Rel(global_aggregator, global_db, "Сохраняет", "SQL")
+Rel(global_aggregator, erp_adapter, "События для ERP", "Internal Event")
+Rel(erp_adapter, erp, "Обмен данными", "REST")
+Rel(web_app, api_gateway, "API вызовы", "HTTPS")
+Rel(edge_gateway, web_app, "Перенаправление на глобальный UI", "HTTPS")
+
+@enduml
