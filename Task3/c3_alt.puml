@@ -1,0 +1,27 @@
+@startuml c3_alt
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Component.puml
+
+title C3: Компонентная диаграмма - Cloud Core Service (Альтернативное решение)
+
+Container_Boundary(cloud_core, "Cloud Core Service") {
+    Component(rest_controller, "REST Controller", "Spring MVC", "Внешний API")
+    Component(stream_listener, "Kafka Listener", "Spring Kafka", "Чтение потока событий")
+    Component(analytics_engine, "Analytics Engine", "Service", "Сложная аналитика данных")
+    Component(notification_service, "Notification Service", "Service", "Рассылка PUSH/SMS")
+    Component(jpa_repo, "JPA Repository", "Hibernate", "Доступ к данным")
+}
+
+ContainerDb(main_db, "Global DB", "PostgreSQL", "База данных")
+ContainerDb(kafka, "Event Bus", "Kafka", "Шина событий")
+
+Rel(rest_controller, analytics_engine, "Использует")
+Rel(stream_listener, kafka, "Потребляет")
+Rel(stream_listener, analytics_engine, "Передает Данные")
+
+Rel(analytics_engine, jpa_repo, "Сохраняет Состояние")
+Rel(analytics_engine, notification_service, "Запускает Тревогу")
+
+Rel(notification_service, jpa_repo, "Логирует Уведомление")
+Rel(jpa_repo, main_db, "SQL")
+
+@enduml

@@ -1,0 +1,23 @@
+@startuml c2_integration
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Container.puml
+
+title C2: Пример интеграции (Клиент "АгроТех Х")
+
+System_Boundary(client_infrastructure, "Инфраструктура Клиента") {
+    Container(farm_1, "Ферма 1 (Edge)", "Наш Edge-контейнер", "Отправляет данные")
+    Container(farm_2, "Ферма 2 (Edge)", "Наш Edge-контейнер", "Отправляет данные")
+    Container(client_backend, "Backend Клиента", "Python", "Забирает аналитику")
+}
+
+System_Boundary(saas, "AgroMonitor SaaS") {
+    Container(ingestion, "Data Ingestion", "RabbitMQ/MQTT", "Прием данных с ферм")
+    Container(public_api, "Public API", "REST", "Выдача данных")
+}
+
+Rel(farm_1, ingestion, "Синхронизация (Tenant ID: agrotech_x)", "AMQP over SSL")
+Rel(farm_2, ingestion, "Синхронизация (Tenant ID: agrotech_x)", "AMQP over SSL")
+
+Rel(client_backend, public_api, "GET /api/v1/reports", "HTTPS (API Key)")
+Rel(public_api, client_backend, "Webhook: Тревога", "POST")
+
+@enduml

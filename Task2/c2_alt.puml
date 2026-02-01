@@ -1,0 +1,44 @@
+@startuml c2_alt
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Container.puml
+
+title C2: Контейнерная диаграмма (Альтернативное решение - Cloud Native)
+
+Person(operator, "Оператор фермы", "Мониторинг через Интернет")
+Person(manager, "Менеджер/Аналитик", "Глобальная аналитика")
+System_Ext(cameras, "Видеокамеры", "RTSP over Internet")
+System_Ext(sensors, "Датчики", "MQTT over Internet")
+System_Ext(erp, "ERP 1C", "Корпоративная система")
+
+System_Boundary(cloud_system, "AgroMonitor Cloud Platform") {
+    
+    Container(ingress, "Ingress Controller", "Nginx", "Вход для устройств и пользователей")
+    
+    Container(video_ingest, "Video Ingestion", "Kafka", "Прием видеопотоков")
+    Container(video_proc, "Cloud Video AI", "Python, GPU Cluster", "Обработка видео")
+    
+    Container(iot_hub, "IoT Hub", "Go, MQTT Broker", "Управление устройствами")
+    Container(core_logic, "Core Business Service", "Java Spring", "Вся бизнес-логика")
+    Container(notification, "Notification Service", "Go", "Рассылка уведомлений")
+    
+    ContainerDb(main_db, "Main DB", "PostgreSQL (Managed)", "Единая база данных")
+    ContainerDb(event_bus, "Event Bus", "Kafka", "Глобальная шина событий")
+}
+
+Rel(operator, ingress, "HTTPS", "Internet")
+Rel(cameras, ingress, "Stream", "WebRTC")
+Rel(sensors, ingress, "Telemetry", "WSS")
+
+Rel(ingress, video_ingest, "Route Stream")
+Rel(ingress, iot_hub, "Route MQTT")
+
+Rel(video_ingest, video_proc, "Consume")
+Rel(video_proc, event_bus, "Events")
+
+Rel(iot_hub, event_bus, "Telemetry Events")
+Rel(core_logic, event_bus, "Process Rules")
+Rel(core_logic, main_db, "Persist")
+Rel(core_logic, erp, "Sync")
+Rel(notification, event_bus, "Alert Trigger")
+Rel(notification, operator, "Push/SMS")
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml c1_alt
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Context.puml
+
+title C1: Система мониторинга животных (AgroTech) (Альтернативное решение - Облачное)
+
+Person(operator, "Оператор фермы", "Следит за оповещениями и состоянием животных")
+Person(vet, "Ветеринар/Зоотехник", "Анализирует здоровье и развитие стада")
+Person(admin, "Администратор", "Управляет настройками системы")
+
+System(monitoring_system, "Система мониторинга (Cloud)", "Централизованная облачная платформа мониторинга")
+
+System_Ext(cameras, "Видеокамеры", "RTSP/ONVIF потоки (через Интернет)")
+System_Ext(sensors, "Датчики IoT", "Температура, влажность, CO2, вода")
+System_Ext(feeders, "Контроллеры кормушек/поилок", "Управление подачей")
+System_Ext(erp, "ERP 1C", "Учет поголовья и кормов")
+System_Ext(mobile_app, "Мобильное приложение", "Для сотрудников в полях")
+
+Rel(operator, monitoring_system, "Получает тревоги и отчеты (Web/App)")
+Rel(vet, monitoring_system, "Просматривает аналитику (Web)")
+Rel(admin, monitoring_system, "Настраивает систему")
+
+Rel(monitoring_system, cameras, "Получает сжатый видеопоток", "SRT/WebRTC")
+Rel(monitoring_system, sensors, "Считывает показатели", "MQTT over SSL")
+Rel(monitoring_system, feeders, "Управляет устройствами", "MQTT")
+
+Rel(monitoring_system, erp, "Синхронизирует данные", "REST API")
+Rel(monitoring_system, mobile_app, "Предоставляет API", "HTTPS")
+
+@enduml

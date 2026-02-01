@@ -1,0 +1,25 @@
+@startuml c2_isolation_db_per_tenant
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Container.puml
+
+title C2: Изоляция данных - Вариант 1 (Database per Tenant)
+
+System_Boundary(saas, "SaaS Platform") {
+    Container(api, "API Service", "Go", "Роутинг запросов")
+    Container(tenant_mgr, "Tenant Manager", "Go", "Хранит маппинг TenantID -> DB Connection")
+    
+    ContainerDb(db_tenant_a, "DB Tenant A", "PostgreSQL", "Данные клиента А")
+    ContainerDb(db_tenant_b, "DB Tenant B", "PostgreSQL", "Данные клиента B")
+    ContainerDb(db_tenant_c, "DB Tenant C", "PostgreSQL", "Данные клиента C")
+}
+
+Rel(api, tenant_mgr, "Получение конфига БД (TenantID)")
+Rel(api, db_tenant_a, "Запрос", "JDBC/SQL")
+Rel(api, db_tenant_b, "Запрос", "JDBC/SQL")
+Rel(api, db_tenant_c, "Запрос", "JDBC/SQL")
+
+Note right of db_tenant_c
+  Плюсы: Полная изоляция, Backup/Restore для клиента.
+  Минусы: Дорого, сложно обновлять схемы во всех БД.
+End note
+
+@enduml

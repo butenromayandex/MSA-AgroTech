@@ -1,0 +1,22 @@
+@startuml c1_saas
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.0.1/C4_Context.puml
+
+title C1: SaaS Платформа (Контекст)
+
+Person(tenant_admin, "Администратор Агрохолдинга", "Клиент платформы")
+Person(saas_admin, "Администратор Платформы", "Техподдержка и управление")
+
+System(saas_platform, "AgroMonitor SaaS", "Мультитенантная платформа мониторинга")
+
+System_Ext(tenant_systems, "Системы Клиента", "ERP, Edge-устройства на фермах")
+System_Ext(payment_system, "Платежный шлюз", "ЮKassa")
+System_Ext(email_service, "Email Service", "SendGrid/Mailgun")
+
+Rel(tenant_admin, saas_platform, "Регистрируется, управляет подпиской")
+Rel(saas_admin, saas_platform, "Мониторит состояние платформы")
+
+Rel(saas_platform, tenant_systems, "Сбор телеметрии, Интеграция по API")
+Rel(saas_platform, payment_system, "Проведение рекуррентных платежей")
+Rel(saas_platform, email_service, "Отправка уведомлений и счетов")
+
+@enduml
